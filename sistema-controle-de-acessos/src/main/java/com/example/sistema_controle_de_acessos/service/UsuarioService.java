@@ -1,7 +1,8 @@
 package com.example.sistema_controle_de_acessos.service;
 
-import com.example.sistema_controle_de_acessos.config.SecurityConfig;
+import com.example.sistema_controle_de_acessos.exception.AcessoNegadoException;
 import com.example.sistema_controle_de_acessos.exception.LoginInvalidoException;
+import com.example.sistema_controle_de_acessos.exception.UsuarioBloqueadoException;
 import com.example.sistema_controle_de_acessos.model.StatusUsuario;
 import com.example.sistema_controle_de_acessos.model.Usuario;
 import com.example.sistema_controle_de_acessos.repository.UsuarioRepository;
@@ -30,17 +31,17 @@ public class UsuarioService {
 
     public void cadastrarUsuario(String senha, String nome, String email, Usuario usuario){
 
-        if (senha == null) throw new RuntimeException("\nSenha inválida. Tente Novamente");
+        if (senha == null) throw new AcessoNegadoException("\nSenha inválida. Tente Novamente");
 
-        if (nome == null) throw new RuntimeException("\nNome inválido. Tente Novamente");
+        if (nome == null) throw new AcessoNegadoException("\nNome inválido. Tente Novamente");
 
-        if (usuario == null) throw new RuntimeException("\nUsuário inválido. Tente Novamente");
+        if (usuario == null) throw new AcessoNegadoException("\nUsuário inválido. Tente Novamente");
 
-        if (email == null) throw new RuntimeException("\nEmail não pode ser vazio");
+        if (email == null) throw new AcessoNegadoException("\nEmail não pode ser vazio");
 
         Optional<Usuario> findByEmail = usuarioRepository.findByEmail(email);
 
-        if (findByEmail.isPresent()) throw new RuntimeException("\nEsse email já está cadastrado. Tente Novamente");
+        if (findByEmail.isPresent()) throw new AcessoNegadoException("\nEsse email já está cadastrado. Tente Novamente");
 
         usuario.setNome(nome.toUpperCase().trim());
         usuario.setEmail(email.toLowerCase().trim());
@@ -54,17 +55,17 @@ public class UsuarioService {
     public Usuario loginUsuario(String email, String senha){
 
         if(email.isBlank() || senha.isBlank())
-            throw new RuntimeException("\nEmail ou Senha inválidos. Tente Novamente");
+            throw new LoginInvalidoException("\nEmail ou Senha inválidos. Tente Novamente");
 
         Optional<Usuario> findByEmail = usuarioRepository.findByEmail(email);
 
         if (findByEmail.isEmpty())
-            throw new RuntimeException("\nEmail ou Senha inválidos. Tente Novamente");
+            throw new LoginInvalidoException("\nEmail ou Senha inválidos. Tente Novamente");
 
         Usuario usuario = findByEmail.get();
 
         if (usuario.getStatusUsuario() == StatusUsuario.BLOQUEADO)
-            throw new RuntimeException("\nConta bloqueada. Procure um administrador");
+            throw new UsuarioBloqueadoException("\nConta bloqueada. Procure um administrador");
 
         if (!passwordEncoder.matches(senha, usuario.getSenha()))
             throw new LoginInvalidoException("E-mail ou senha incorretos");
